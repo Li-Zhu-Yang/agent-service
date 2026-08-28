@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智能客服 · 运营后台</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- 登录 -->
+  <div id="login-wrap" class="login-wrap">
+    <div class="login-box">
+      <h2>运营后台登录</h2>
+      <input id="login-user" placeholder="用户名" autocomplete="username" />
+      <input id="login-pass" type="password" placeholder="密码" autocomplete="current-password" />
+      <button class="btn" id="login-btn" style="width:100%">登录</button>
+    </div>
+  </div>
+
+  <!-- 后台主体 -->
+  <div id="admin-wrap" class="admin-page hidden">
+    <aside class="sidebar">
+      <h2>智能客服后台</h2>
+      <button class="nav-item active" data-tab="overview">📊 运营概览</button>
+      <button class="nav-item" data-tab="tickets">🎫 问题工单</button>
+      <button class="nav-item" data-tab="reports">📈 每日报表</button>
+      <button class="nav-item" data-tab="knowledge">📚 知识库</button>
+      <button class="nav-item" data-tab="conversations">💬 会话记录</button>
+      <div style="margin-top:24px;padding:0 20px;font-size:13px;color:#64748b">
+        当前用户：<span id="admin-user"></span><br />
+        <button class="btn ghost sm" id="logout-btn" style="margin-top:8px;color:#cbd5e1;border-color:#334155">退出登录</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <h1 class="page-title" id="page-title">运营概览</h1>
+
+      <div class="tab-pane" id="pane-overview">
+        <div class="stat-grid" id="overview-grid"></div>
+      </div>
+
+      <div class="tab-pane hidden" id="pane-tickets">
+        <div class="card">
+          <h3>问题工单（转人工归档）</h3>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr><th>工单号</th><th>问题摘要</th><th>意图</th><th>优先级</th><th>状态</th><th>指派</th><th>创建时间</th></tr>
+              </thead>
+              <tbody id="tickets-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane hidden" id="pane-reports">
+        <div class="stat-grid" id="report-stats"></div>
+        <div style="margin-bottom:12px" id="report-actions"></div>
+        <div class="card">
+          <h3>今日高频咨询</h3>
+          <div id="report-freq"></div>
+        </div>
+        <div class="card">
+          <h3>意图分布</h3>
+          <div id="report-dist"></div>
+        </div>
+      </div>
+
+      <div class="tab-pane hidden" id="pane-knowledge">
+        <div class="card">
+          <h3>上传文档（PDF / Word / Markdown / TXT）</h3>
+          <div class="form-row">
+            <input type="file" id="kb-file" />
+            <button class="btn" id="kb-upload-btn">上传入库</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>粘贴文本入库</h3>
+          <div class="form-row"><input id="kb-title" placeholder="标题，如：售后维修服务指南" /></div>
+          <div class="form-row"><textarea id="kb-text" placeholder="正文内容，支持 Markdown 标题，问-答形式最佳"></textarea></div>
+          <button class="btn" id="kb-ingest-btn">入库</button>
+        </div>
+        <div class="card">
+          <h3>检索测试</h3>
+          <div class="form-row">
+            <input id="kb-search" placeholder="输入一个问题测试知识库命中" />
+            <button class="btn ghost" id="kb-search-btn">检索</button>
+          </div>
+          <div id="kb-results"></div>
+        </div>
+        <div class="card">
+          <h3>已入库文档</h3>
+          <table>
+            <thead>
+              <tr><th>标题</th><th>状态</th><th>分块</th><th>字数</th><th>分类</th><th>操作</th></tr>
+            </thead>
+            <tbody id="kb-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane hidden" id="pane-conversations">
+        <div class="card">
+          <h3>会话记录</h3>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr><th>标题</th><th>意图</th><th>状态</th><th>轮数</th><th>最后消息</th><th>开始时间</th></tr>
+              </thead>
+              <tbody id="conv-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>
