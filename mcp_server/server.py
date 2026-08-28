@@ -1,11 +1,11 @@
 """MCP 协议服务端（stdio 传输）。
 
-暴露工具（复用 agent.tools 的实现与 spec）：
-- query_order        订单查询
-- apply_refund       退款申请
-- query_weather      天气查询（示例）
-- knowledge_search   知识库检索
-- human_handoff      创建转人工工单
+暴露工具：
+- query_order        订单查询（复用 agent.tools.order_tool）
+- apply_refund       退款申请（复用 agent.tools.refund_tool）
+- query_weather      天气查询，示例（复用 agent.tools.weather_tool）
+- knowledge_search   知识库检索（直接调 rag 检索流水线，返回结构化结果）
+- human_handoff      转人工工单（复用 agent.tools.human_tool，落库 Ticket）
 
 运行：python -m mcp_server
 """
@@ -20,6 +20,7 @@ from agent.tools.human_tool import HumanHandoffTool
 from agent.tools.order_tool import OrderQueryTool
 from agent.tools.refund_tool import RefundTool
 from agent.tools.weather_tool import WeatherTool
+from core.database import SessionLocal
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ mcp = FastMCP("ragent-cs", instructions="智享电器智能客服系统工具集
 _order_tool = OrderQueryTool()
 _refund_tool = RefundTool()
 _weather_tool = WeatherTool()
-_human_tool = HumanHandoffTool()
+_human_tool = HumanHandoffTool(session_factory=SessionLocal)
 
 
 @mcp.tool(name="query_order")

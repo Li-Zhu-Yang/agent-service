@@ -16,6 +16,7 @@ class DocumentOut(BaseModel):
     chunk_count: int
     content_length: int
     category: str
+    error: str = ""
     created_at: datetime
 
     model_config = {"from_attributes": True}

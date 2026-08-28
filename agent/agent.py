@@ -13,7 +13,6 @@ from typing import Any
 from agent.graph.graph_builder import get_graph
 from agent.graph.state import ChatState, initial_state
 from agent.memory import short_term
-from agent.memory.long_term import get_user_profile
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ class Agent:
 
 
 # 供网页/MCP 复用的会话上下文加载
-async def load_context(session_id: str, db) -> tuple[list[dict[str, str]], list[str], dict[str, Any]]:
+async def load_context(session_id: str) -> tuple[list[dict[str, str]], list[str], dict[str, Any]]:
     """从短期记忆加载 (history, history_intents, meta)。"""
     history = await short_term.get_history(session_id, limit=10)
     meta = await short_term.get_meta(session_id)

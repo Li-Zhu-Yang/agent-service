@@ -19,13 +19,12 @@ from sqlalchemy import select
 
 from agent.agent import agent, load_context, save_context
 from agent.graph.state import ChatState, initial_state
-from api.dependencies import DbSession, get_client_ip
+from api.dependencies import DbSession, get_client_ip, get_optional_user
 from core.exceptions import RateLimitError
 from core.rate_limit import rate_limiter
 from models.conversation import Conversation
 from models.message import Message
 from schemas.chat import ChatRequest
-from system.auth import get_optional_user
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +110,7 @@ async def chat_stream(
     user_id = user.id if user else None
 
     # 上下文：短期记忆（Redis/内存），缺失则回退数据库最近消息
-    history, history_intents, meta = await load_context(session_id, db)
+    history, history_intents, meta = await load_context(session_id)
     if not history:
         history = _load_db_history(db, session_id)
 

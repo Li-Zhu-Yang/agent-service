@@ -6,15 +6,12 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from sqlalchemy import select
 
-from sqlalchemy import select  # noqa: E402
-
-from bootstrap.settings import settings  # noqa: E402
-from core.database import SessionLocal, init_db  # noqa: E402
-from models.user import User  # noqa: E402
+from bootstrap.settings import settings
+from core.database import SessionLocal, init_db
+from models.user import User
 
 
 def main() -> None:

@@ -93,11 +93,16 @@ core/        基础设施（DB / Redis缓存 / Chroma向量库 / LLM / Embedding
 api/         接口层（chat SSE / conversations / knowledge / admin / auth）
 agent/       Agent 引擎
   ├─ graph/      LangGraph 工作流：intent → retrieval → tool_call → response
+  ├─ dispatch.py     工具调用分发（转人工判定 / 订单·退款参数提取）
+  ├─ generation.py   回复生成逻辑（缓存 / 兜底 / 消息构建）
   ├─ memory/     短期记忆（Redis）+ 长期画像（DB）
   ├─ tools/      订单 / 退款 / 转人工 / 天气
   └─ intent.py   意图分层识别（规则 + few-shot）
 rag/         RAG 引擎（解析 → 行业分块 → 入库；向量+BM25 → RRF → 重排）
-system/      认证 / 用户 / 审计 / 报表
+  ├─ ingestion/        解析与入库（parser / chunker / pipeline）
+  ├─ retrieval/        混合检索（tokenizer / fusion / reranker / retriever）
+  └─ knowledge_graph/  知识图谱查询（Neo4j 占位）
+services/    认证 / 用户 / 审计 / 报表
 mcp_server/  MCP stdio 服务
 models/      SQLAlchemy ORM
 migrations/  Alembic 迁移
@@ -177,9 +182,9 @@ docker run --rm -p 8000:8000 --env-file .env ragent-py
 ├── bootstrap/            # FastAPI 应用入口
 ├── core/                 # 基础设施
 ├── api/routes/           # 接口
-├── agent/                # Agent 引擎
-├── rag/                  # RAG 引擎
-├── system/               # 认证/报表/审计
+├── agent/                # Agent 引擎（graph / dispatch / generation / tools）
+├── rag/                  # RAG 引擎（ingestion / retrieval / knowledge_graph）
+├── services/             # 认证/报表/审计
 ├── mcp_server/           # MCP 服务
 ├── models/  schemas/     # ORM 与 Pydantic
 ├── migrations/           # Alembic

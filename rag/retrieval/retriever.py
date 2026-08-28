@@ -1,35 +1,21 @@
 """多路检索器：向量（Chroma）+ BM25 关键词，混合召回。
 
 BM25 索引从向量库全量分块惰性构建，入库后通过 invalidate_bm25_cache() 失效重建。
-针对中文做字符级双字切分（轻量、无外部分词依赖）。
+分词见 rag/retrieval/tokenizer.py（中文双字切分，无外部分词依赖）。
 """
 from __future__ import annotations
 
 import asyncio
 import logging
-import re
 from typing import Any
 
 from bootstrap.settings import settings
 from core.vector_store import vector_store
+from rag.retrieval.fusion import rrf_fuse
+from rag.retrieval.reranker import rerank
+from rag.retrieval.tokenizer import tokenize
 
 logger = logging.getLogger(__name__)
-
-_CJK_RE = re.compile(r"[一-鿿]+")
-_WORD_RE = re.compile(r"[a-zA-Z0-9]+")
-
-
-def tokenize(text: str) -> list[str]:
-    """中文连续片段按双字切分，英文/数字保留整词。"""
-    tokens: list[str] = []
-    for part in _WORD_RE.findall(text.lower()):
-        tokens.append(part)
-    for part in _CJK_RE.findall(text.lower()):
-        if len(part) <= 2:
-            tokens.append(part)
-        else:
-            tokens.extend(part[i : i + 2] for i in range(len(part) - 1))
-    return tokens
 
 
 class BM25Index:
@@ -131,9 +117,6 @@ async def retrieve(
     query: str, top_k: int | None = None
 ) -> list[dict[str, Any]]:
     """完整检索流水线：向量 + BM25 多路召回 → RRF 融合 → 重排。"""
-    from rag.retrieval.fusion import rrf_fuse
-    from rag.retrieval.reranker import rerank
-
     k = top_k or settings.retrieval_top_k
     vec_results, bm25_results = await hybrid_search(query, top_k=k)
     fused = rrf_fuse([vec_results, bm25_results])

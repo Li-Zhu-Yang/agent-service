@@ -5,19 +5,19 @@ import datetime as dt
 
 from fastapi import APIRouter, Depends, Request
 
-from api.dependencies import DbSession, get_client_ip
+from api.dependencies import DbSession, get_client_ip, get_current_user
 from core.exceptions import AuthError
-from schemas.admin import LoginRequest
+from schemas.admin import LoginRequest, TokenOut
 from schemas.common import Envelope
-from system.auth import create_access_token, get_current_user
-from system.audit import write_audit
-from system.user import get_user_by_username
+from services.audit import write_audit
+from services.auth import create_access_token
+from services.user import get_user_by_username
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=Envelope)
-async def login(payload: LoginRequest, request: Request, db: DbSession) -> Envelope:
+@router.post("/login", response_model=Envelope[TokenOut])
+async def login(payload: LoginRequest, request: Request, db: DbSession) -> Envelope[TokenOut]:
     user = get_user_by_username(db, payload.username)
     if user is None or not user.check_password(payload.password):
         raise AuthError("用户名或密码错误")
@@ -30,11 +30,11 @@ async def login(payload: LoginRequest, request: Request, db: DbSession) -> Envel
         db, action="login", username=user.username, user_id=user.id, ip=get_client_ip(request)
     )
     return Envelope(
-        data={
-            "access_token": create_access_token(user),
-            "token_type": "bearer",
-            "user": {"id": user.id, "username": user.username, "role": user.role, "display_name": user.display_name},
-        }
+        data=TokenOut(
+            access_token=create_access_token(user),
+            token_type="bearer",
+            user={"id": user.id, "username": user.username, "role": user.role, "display_name": user.display_name},
+        )
     )
 
 

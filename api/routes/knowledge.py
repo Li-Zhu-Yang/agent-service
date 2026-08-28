@@ -9,16 +9,15 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy import select
 
-from api.dependencies import DbSession
+from api.dependencies import DbSession, require_admin
 from core.exceptions import NotFoundError
 from core.vector_store import vector_store
 from models.document import Document
 from rag.ingestion.pipeline import ingest_text
 from rag.retrieval.retriever import retrieve
 from schemas.common import Envelope
-from schemas.knowledge import SearchRequest, TextIngestRequest
-from system.audit import write_audit
-from system.auth import require_admin
+from schemas.knowledge import ChunkOut, DocumentOut, IngestResult, SearchRequest, TextIngestRequest
+from services.audit import write_audit
 
 logger = logging.getLogger(__name__)
 
@@ -29,30 +28,14 @@ router = APIRouter(
 )
 
 
-@router.get("/documents", response_model=Envelope)
-async def list_documents(db: DbSession) -> Envelope:
+@router.get("/documents", response_model=Envelope[list[DocumentOut]])
+async def list_documents(db: DbSession) -> Envelope[list[DocumentOut]]:
     docs = db.scalars(select(Document).order_by(Document.id.desc())).all()
-    return Envelope(data=[_doc_to_dict(d) for d in docs])
+    return Envelope(data=[DocumentOut.model_validate(d) for d in docs])
 
 
-def _doc_to_dict(d: Document) -> dict:
-    return {
-        "id": d.id,
-        "doc_id": d.doc_id,
-        "title": d.title,
-        "source": d.source,
-        "file_type": d.file_type,
-        "status": d.status,
-        "chunk_count": d.chunk_count,
-        "content_length": d.content_length,
-        "category": d.category,
-        "error": d.error,
-        "created_at": d.created_at.isoformat() if d.created_at else None,
-    }
-
-
-@router.post("/upload", response_model=Envelope)
-async def upload_document(file: UploadFile, db: DbSession, _=Depends(require_admin)) -> Envelope:
+@router.post("/upload", response_model=Envelope[IngestResult])
+async def upload_document(file: UploadFile, db: DbSession) -> Envelope[IngestResult]:
     ext = (file.filename or "md").rsplit(".", 1)[-1].lower()
     doc_id = uuid.uuid4().hex
     with tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}") as tmp:
@@ -76,13 +59,13 @@ async def upload_document(file: UploadFile, db: DbSession, _=Depends(require_adm
         )
         db.commit()
         write_audit(db, action="knowledge_upload", resource=file.filename or "", detail=stats)
-        return Envelope(data=stats)
+        return Envelope(data=IngestResult.model_validate(stats))
     finally:
         Path(tmp_path).unlink(missing_ok=True)
 
 
-@router.post("/text", response_model=Envelope)
-async def ingest_by_text(payload: TextIngestRequest, db: DbSession) -> Envelope:
+@router.post("/text", response_model=Envelope[IngestResult])
+async def ingest_by_text(payload: TextIngestRequest, db: DbSession) -> Envelope[IngestResult]:
     doc_id = payload.doc_id or uuid.uuid4().hex
     stats = await ingest_text(
         doc_id=doc_id, title=payload.title, text=payload.text, category=payload.category
@@ -101,7 +84,7 @@ async def ingest_by_text(payload: TextIngestRequest, db: DbSession) -> Envelope:
     )
     db.commit()
     write_audit(db, action="knowledge_ingest", resource=payload.title, detail=stats)
-    return Envelope(data=stats)
+    return Envelope(data=IngestResult.model_validate(stats))
 
 
 @router.delete("/documents/{doc_id}", response_model=Envelope)
@@ -119,19 +102,20 @@ async def delete_document(doc_id: str, db: DbSession) -> Envelope:
     return Envelope(data={"deleted": True, "removed_chunks": removed})
 
 
-@router.post("/search", response_model=Envelope)
-async def search_knowledge(payload: SearchRequest) -> Envelope:
+@router.post("/search", response_model=Envelope[list[ChunkOut]])
+async def search_knowledge(payload: SearchRequest) -> Envelope[list[ChunkOut]]:
     """检索测试：直接看知识库命中结果。"""
     results = await retrieve(payload.query, top_k=payload.top_k)
     return Envelope(
         data=[
-            {
-                "id": r.get("id"),
-                "doc_id": r.get("doc_id"),
-                "title": r.get("title"),
-                "chunk": r.get("chunk"),
-                "score": r.get("final_score") or r.get("rrf_score") or r.get("score", 0),
-            }
+            ChunkOut(
+                id=r.get("id", ""),
+                doc_id=r.get("doc_id", ""),
+                title=r.get("title", ""),
+                chunk=r.get("chunk", ""),
+                score=float(r.get("final_score") or r.get("rrf_score") or r.get("score") or 0),
+                metadata=r.get("metadata") or {},
+            )
             for r in results
         ]
     )

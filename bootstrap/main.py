@@ -15,10 +15,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from api.error_handlers import register_exception_handlers
 from api.routes import admin, auth, chat, conversations, knowledge
 from bootstrap.settings import PROJECT_ROOT, settings
 from core.database import init_db
-from core.exceptions import register_exception_handlers
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger(__name__)

@@ -8,12 +8,9 @@ from __future__ import annotations
 
 import datetime as dt
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from core.database import SessionLocal, init_db  # noqa: E402
-from system.report import generate_daily_report  # noqa: E402
+from core.database import SessionLocal, init_db
+from services.report import generate_daily_report
 
 
 def main() -> None:

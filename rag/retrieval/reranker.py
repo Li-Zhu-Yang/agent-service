@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from rag.retrieval.retriever import tokenize
+from rag.retrieval.tokenizer import tokenize
 
 
 def rerank(

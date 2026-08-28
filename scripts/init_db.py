@@ -7,14 +7,10 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
-# 允许以 `python -m scripts.init_db` 方式运行
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from core.database import engine, init_db  # noqa: E402
-from models.base import Base  # noqa: E402
-import models  # noqa: F401, E402
+from core.database import engine, init_db
+from models.base import Base
+import models  # noqa: F401
 
 
 def main() -> None:

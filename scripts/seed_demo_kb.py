@@ -8,15 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from sqlalchemy import select
 
-from sqlalchemy import select  # noqa: E402
-
-from core.database import SessionLocal, init_db  # noqa: E402
-from models.document import Document  # noqa: E402
-from rag.ingestion.pipeline import ingest_text  # noqa: E402
+from core.database import SessionLocal, init_db
+from models.document import Document
+from rag.ingestion.pipeline import ingest_text
 
 DEMO_DOCS: dict[str, str] = {
     "售后维修服务指南": """# 售后维修服务指南
